@@ -12,8 +12,7 @@ SELECT driver,
        podium_rate
 FROM drivers
 WHERE race_entries > 20
-ORDER BY podium_rate DESC
-LIMIT 10;
+ORDER BY podium_rate DESC;
 
 --Most Successful Nationalities
 
@@ -21,8 +20,7 @@ SELECT nationality,
        SUM(race_wins) AS total_wins
 FROM drivers
 GROUP BY nationality
-ORDER BY total_wins DESC
-LIMIT 10;
+ORDER BY total_wins DESC;
 
 --Drivers with Highest Points Efficiency
 

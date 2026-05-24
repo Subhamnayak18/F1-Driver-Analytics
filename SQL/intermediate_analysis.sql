@@ -34,8 +34,7 @@ SELECT driver,
        ROUND((championships::numeric / race_entries) * 100,2) AS championship_efficiency
 FROM drivers
 WHERE championships > 0
-ORDER BY championship_efficiency DESC
-LIMIT 10;
+ORDER BY championship_efficiency DESC;
 
 --Decade-wise Driver Performance Trends
 
