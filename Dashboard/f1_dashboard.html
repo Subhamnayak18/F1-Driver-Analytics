@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formula 1 Driver Analytics Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #e10600;
+  --red-dark: #a30400;
+  --red-dim: #3a0a08;
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface2: #161616;
+  --surface3: #1c1c1c;
+  --border: #222222;
+  --border2: #2a2a2a;
+  --text: #f0f0f0;
+  --text-muted: #888;
+  --text-dim: #444;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 400;
+  line-height: 1.4;
+  min-height: 100vh;
+  padding: 0;
+}
+
+/* LAYOUT */
+.dash {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 20px 24px 32px;
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  gap: 16px;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-area { display: flex; align-items: center; gap: 16px; }
+.f1-stripe { display: flex; gap: 3px; }
+.f1-stripe span {
+  display: block; width: 5px; height: 28px; border-radius: 1px;
+  background: var(--red);
+}
+.f1-stripe span:nth-child(even) { background: #fff; }
+.header-titles .main {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px; font-weight: 700;
+  color: #fff; letter-spacing: 1px; text-transform: uppercase;
+}
+.header-titles .sub {
+  font-size: 10px; color: var(--text-dim);
+  letter-spacing: 3px; text-transform: uppercase; margin-top: 2px;
+}
+.header-right { display: flex; align-items: center; gap: 12px; }
+.pill {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 20px; padding: 5px 14px;
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-muted); cursor: pointer; transition: all .2s;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 500;
+}
+.pill:hover, .pill.active { border-color: var(--red); color: var(--red); }
+.live-badge {
+  background: var(--red-dim); border: 1px solid var(--red);
+  border-radius: 4px; padding: 3px 10px;
+  font-size: 9px; letter-spacing: 2px; color: var(--red);
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  text-transform: uppercase;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+/* KPI ROW */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: border-color .2s;
+}
+.kpi:hover { border-color: var(--red-dark); }
+.kpi::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; width: 3px; height: 100%;
+  background: var(--red);
+}
+.kpi-icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: var(--surface3);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+.kpi-icon svg { width: 18px; height: 18px; stroke: var(--red); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.kpi-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 36px; font-weight: 700; color: #fff; line-height: 1;
+}
+.kpi-label {
+  font-size: 9px; color: var(--text-dim);
+  letter-spacing: 2px; text-transform: uppercase; margin-top: 8px;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 500;
+}
+.kpi-sub { font-size: 10px; color: #3a9e5a; margin-top: 5px; }
+
+/* MAIN ROW */
+.main-row {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 14px;
+}
+
+/* BOTTOM ROW */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+}
+.card-header {
+  display: flex; align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.card-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase; color: #ccc;
+}
+.card-tag {
+  font-size: 9px; color: var(--red);
+  letter-spacing: 1.5px; text-transform: uppercase;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+/* WINS CHART */
+.bar-row {
+  display: flex; align-items: center;
+  gap: 10px; margin-bottom: 7px;
+}
+.bar-pos {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; color: var(--text-dim);
+  min-width: 18px; text-align: right;
+}
+.bar-name {
+  font-size: 11px; color: #aaa;
+  min-width: 108px; text-align: right;
+  white-space: nowrap; overflow: hidden;
+}
+.bar-track {
+  flex: 1; height: 24px;
+  background: var(--surface3); border-radius: 3px; overflow: hidden;
+}
+.bar-fill {
+  height: 100%; border-radius: 3px;
+  display: flex; align-items: center;
+  justify-content: flex-end; padding-right: 8px;
+  font-size: 10px; font-weight: 500; color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  transition: width 1s cubic-bezier(.4,0,.2,1);
+}
+.b1 { background: #e10600; }
+.b2 { background: #b80500; }
+.b3 { background: #8c0400; }
+.b-rest { background: #2e1010; }
+
+/* GOAT CHART */
+.goat-row {
+  display: flex; align-items: center;
+  gap: 8px; margin-bottom: 6px;
+}
+.goat-rank {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; color: var(--text-dim);
+  min-width: 20px; text-align: right;
+}
+.goat-name {
+  font-size: 11px; color: #aaa;
+  min-width: 112px; text-align: right;
+}
+.goat-track {
+  flex: 1; height: 22px;
+  background: var(--surface3); border-radius: 3px; overflow: hidden;
+}
+.goat-fill {
+  height: 100%; border-radius: 3px;
+  display: flex; align-items: center;
+  justify-content: flex-end; padding-right: 7px;
+  font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.8);
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.g1 { background: linear-gradient(90deg, #a30400, #e10600); }
+.g2 { background: #b80500; }
+.g3 { background: #8c0400; }
+.g-rest { background: #2a1010; }
+.g1 { position: relative; }
+
+/* NATIONALITY GRID */
+.nat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.nat-item {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px; padding: 10px 12px;
+  display: flex; align-items: flex-start; gap: 10px;
+  transition: border-color .2s;
+}
+.nat-item:hover { border-color: var(--red-dark); }
+.nat-flag { font-size: 20px; line-height: 1; padding-top: 1px; }
+.nat-info { flex: 1; }
+.nat-country { font-size: 11px; color: #ccc; font-weight: 500; }
+.nat-wins-label { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+.nat-bar { height: 3px; background: var(--surface3); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.nat-bar-fill { height: 100%; background: var(--red); border-radius: 2px; transition: width .8s ease; }
+.nat-rank {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--border2);
+  line-height: 1;
+}
+
+/* DECADES */
+.section-mini-label {
+  font-size: 9px; color: var(--text-dim);
+  letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Barlow Condensed', sans-serif;
+  margin-bottom: 10px;
+}
+.decade-row {
+  display: flex; align-items: center;
+  gap: 10px; margin-bottom: 7px;
+}
+.decade-era {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; color: var(--text-dim);
+  min-width: 38px; letter-spacing: .5px;
+}
+.decade-track {
+  flex: 1; height: 18px;
+  background: var(--surface3); border-radius: 3px; overflow: hidden;
+}
+.decade-fill {
+  height: 100%; border-radius: 3px;
+  display: flex; align-items: center;
+  padding-left: 8px;
+  font-size: 9px; color: #777;
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: .5px;
+  transition: width .8s ease;
+}
+.decade-count {
+  font-size: 10px; color: var(--text-dim);
+  min-width: 16px; text-align: right;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+.nat-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.nat-pill {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 10px; color: var(--text-muted);
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: .5px;
+}
+
+/* FOOTER */
+.footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 10px; border-top: 1px solid var(--border);
+  font-size: 9px; color: var(--text-dim);
+  letter-spacing: 1px; text-transform: uppercase;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.footer-right { display: flex; gap: 20px; }
+</style>
+</head>
+<body>
+<div class="dash">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-area">
+      <div class="f1-stripe">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="header-titles">
+        <div class="main">Formula 1 Driver Analytics</div>
+        <div class="sub">All-time performance dashboard &nbsp;·&nbsp; 1950 – 2024</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="pill active">All Eras</span>
+      <span class="pill">Champions Only</span>
+      <span class="pill">Modern Era (2000+)</span>
+      <span class="live-badge">Live</span>
+    </div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="kpi-val">868</div>
+      <div class="kpi-label">Total Drivers</div>
+      <div class="kpi-sub">↑ Across 74 seasons</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      </div>
+      <div class="kpi-val">74</div>
+      <div class="kpi-label">Championships</div>
+      <div class="kpi-sub">↑ 1950 – 2024</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+      </div>
+      <div class="kpi-val">1,136</div>
+      <div class="kpi-label">Total Race Wins</div>
+      <div class="kpi-sub">↑ Hamilton leads at 103</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div class="kpi-val">12.4%</div>
+      <div class="kpi-label">Avg Win Rate</div>
+      <div class="kpi-sub">↑ Top 10 drivers avg</div>
+    </div>
+  </div>
+
+  <!-- MAIN ROW -->
+  <div class="main-row">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Top 10 Drivers by Race Wins</div>
+        <div class="card-tag">All Time</div>
+      </div>
+      <div id="wins-chart"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Top Drivers by GOAT Score</div>
+        <div class="card-tag">Composite Index</div>
+      </div>
+      <div id="goat-chart"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="bottom-row">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Race Wins by Nationality</div>
+        <div class="card-tag">Top 10 Nations</div>
+      </div>
+      <div class="nat-grid" id="nat-grid"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Championship Wins by Decade</div>
+        <div class="card-tag">Era Evolution</div>
+      </div>
+      <div class="section-mini-label">Distinct world champions per era</div>
+      <div id="decade-chart"></div>
+      <hr class="divider">
+      <div class="section-mini-label">Most dominant nationalities</div>
+      <div class="nat-pills" id="nat-pills"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>Formula 1 Driver Analytics &nbsp;·&nbsp; Data: 1950–2024 &nbsp;·&nbsp; Portfolio Dashboard</span>
+    <div class="footer-right">
+      <span>github.com/yourhandle</span>
+      <span>linkedin.com/in/yourhandle</span>
+      <span>Built with Power BI</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const wins = [
+  {name:"L. Hamilton",  wins:103, pct:100},
+  {name:"M. Verstappen",wins:63,  pct:61},
+  {name:"M. Schumacher",wins:91,  pct:88},
+  {name:"S. Vettel",    wins:53,  pct:51},
+  {name:"A. Prost",     wins:51,  pct:49},
+  {name:"A. Senna",     wins:41,  pct:40},
+  {name:"F. Alonso",    wins:32,  pct:31},
+  {name:"N. Mansell",   wins:31,  pct:30},
+  {name:"J. Stewart",   wins:27,  pct:26},
+  {name:"J. Clark",     wins:25,  pct:24},
+];
+
+const wc = document.getElementById("wins-chart");
+wins.forEach((d, i) => {
+  const cls = i===0?"b1":i===1?"b2":i===2?"b3":"b-rest";
+  const row = document.createElement("div");
+  row.className = "bar-row";
+  row.innerHTML = `
+    <div class="bar-pos">#${i+1}</div>
+    <div class="bar-name">${d.name}</div>
+    <div class="bar-track">
+      <div class="bar-fill ${cls}" style="width:0%" data-w="${d.pct}">${d.wins}</div>
+    </div>`;
+  wc.appendChild(row);
+});
+
+const goat = [
+  {name:"L. Hamilton",   score:2.12, pct:100},
+  {name:"M. Verstappen", score:1.98, pct:93},
+  {name:"S. Vettel",     score:1.87, pct:88},
+  {name:"V. Bottas",     score:1.51, pct:71},
+  {name:"J.M. Fangio",   score:1.48, pct:70},
+  {name:"C. Leclerc",    score:1.45, pct:68},
+  {name:"N. Rosberg",    score:1.41, pct:66},
+  {name:"M. Schumacher", score:1.28, pct:60},
+  {name:"A. Ascari",     score:1.05, pct:50},
+  {name:"A. Senna",      score:1.02, pct:48},
+  {name:"F. Alonso",     score:0.98, pct:46},
+];
+
+const gc = document.getElementById("goat-chart");
+goat.forEach((d, i) => {
+  const cls = i===0?"g1":i===1?"g2":i===2?"g3":"g-rest";
+  const row = document.createElement("div");
+  row.className = "goat-row";
+  row.innerHTML = `
+    <div class="goat-rank">#${i+1}</div>
+    <div class="goat-name">${d.name}</div>
+    <div class="goat-track">
+      <div class="goat-fill ${cls}" style="width:0%" data-w="${d.pct}">${d.score.toFixed(2)}</div>
+    </div>`;
+  gc.appendChild(row);
+});
+
+const nats = [
+  {flag:"🇬🇧",country:"United Kingdom",wins:312,pct:100},
+  {flag:"🇩🇪",country:"Germany",       wins:229,pct:73},
+  {flag:"🇧🇷",country:"Brazil",        wins:101,pct:32},
+  {flag:"🇳🇱",country:"Netherlands",   wins:63, pct:20},
+  {flag:"🇫🇮",country:"Finland",       wins:58, pct:19},
+  {flag:"🇫🇷",country:"France",        wins:79, pct:25},
+  {flag:"🇮🇹",country:"Italy",         wins:46, pct:15},
+  {flag:"🇦🇷",country:"Argentina",     wins:38, pct:12},
+  {flag:"🇦🇺",country:"Australia",     wins:35, pct:11},
+  {flag:"🇦🇹",country:"Austria",       wins:30, pct:10},
+];
+
+const ng = document.getElementById("nat-grid");
+nats.forEach((n, i) => {
+  const item = document.createElement("div");
+  item.className = "nat-item";
+  item.innerHTML = `
+    <div class="nat-flag">${n.flag}</div>
+    <div class="nat-info">
+      <div class="nat-country">${n.country}</div>
+      <div class="nat-wins-label">${n.wins} wins</div>
+      <div class="nat-bar"><div class="nat-bar-fill" style="width:0%" data-w="${n.pct}%"></div></div>
+    </div>
+    <div class="nat-rank">#${i+1}</div>`;
+  ng.appendChild(item);
+});
+
+const decades = [
+  {era:"1950s", count:4,  max:10, label:"Fangio dominates",    color:"#3a1010"},
+  {era:"1960s", count:8,  max:10, label:"Clark · Hill era",    color:"#5a1a10"},
+  {era:"1970s", count:9,  max:10, label:"Lauda · Stewart",     color:"#751a0e"},
+  {era:"1980s", count:10, max:10, label:"Senna · Prost",       color:"#e10600"},
+  {era:"1990s", count:7,  max:10, label:"Schumacher rise",     color:"#b80500"},
+  {era:"2000s", count:5,  max:10, label:"Schumi · Alonso",     color:"#8c0400"},
+  {era:"2010s", count:6,  max:10, label:"Hamilton era",        color:"#b00400"},
+  {era:"2020s", count:4,  max:10, label:"Verstappen era",      color:"#6a1a10"},
+];
+
+const dc = document.getElementById("decade-chart");
+decades.forEach(d => {
+  const pct = Math.round(d.count / d.max * 100);
+  const row = document.createElement("div");
+  row.className = "decade-row";
+  row.innerHTML = `
+    <div class="decade-era">${d.era}</div>
+    <div class="decade-track">
+      <div class="decade-fill" style="width:0%;background:${d.color}" data-w="${pct*0.88+8}%">${d.label}</div>
+    </div>
+    <div class="decade-count">${d.count}</div>`;
+  dc.appendChild(row);
+});
+
+const pillData = ["🇬🇧 UK · 8 titles","🇩🇪 Germany · 7","🇧🇷 Brazil · 8","🇳🇱 Netherlands · 4","🇫🇮 Finland · 4"];
+const pp = document.getElementById("nat-pills");
+pillData.forEach(p => {
+  pp.innerHTML += `<span class="nat-pill">${p}</span>`;
+});
+
+// Animate bars after load
+requestAnimationFrame(() => {
+  setTimeout(() => {
+    document.querySelectorAll('[data-w]').forEach(el => {
+      el.style.width = el.dataset.w + (el.dataset.w.includes('%') ? '' : '%');
+    });
+    document.querySelectorAll('.nat-bar-fill[data-w]').forEach(el => {
+      el.style.width = el.dataset.w;
+    });
+  }, 200);
+});
+
+// Filter pills
+document.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
